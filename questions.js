@@ -832,7 +832,7 @@ export const questions = [
       "Higher values provide stronger utility",
       "Utility guarantee scales with"
     ],
-    "points": 0,
+    "points": 1,
     "answers": [
       "Privacy guarantee can be controlled by parameter <gcb-math>\\varepsilon</gcb-math>",
       "Utility guarantee scales with <gcb-math>\\sqrt{n}</gcb-math>"
