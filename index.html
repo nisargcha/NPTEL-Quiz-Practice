@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NPTEL Quiz Practice & Test</title>
+  
+  <!-- MathJax Configuration -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        packages: {'[+]': ['ams']}
+      },
+      svg: {
+        fontCache: 'global'
+      },
+      startup: {
+        ready: () => {
+          MathJax.startup.defaultReady();
+          console.log('MathJax loaded successfully');
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    h1 { color: #667eea; margin-bottom: 8px; }
+    .subtitle { color: #64748b; font-size: 14px; }
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #64748b;
+    }
+    .stat strong { color: #1e293b; font-size: 20px; display: block; }
+    
+    /* Mode Selector */
+    .mode-selector {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .mode-btn {
+      background: white;
+      border: 2px solid #e2e8f0;
+      padding: 12px 32px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .mode-btn:hover { border-color: #667eea; color: #667eea; }
+    .mode-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: transparent;
+    }
+    
+    /* Test Setup */
+    .test-setup {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      text-align: center;
+      display: none;
+    }
+    .test-setup.visible { display: block; }
+    .test-setup h2 { color: #1e293b; margin-bottom: 16px; }
+    .test-setup p { color: #64748b; margin-bottom: 24px; }
+    .question-count-selector {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .count-btn {
+      padding: 12px 24px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .count-btn:hover { border-color: #667eea; color: #667eea; }
+    .count-btn.selected {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+    .start-test-btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 18px;
+      transition: all 0.2s;
+    }
+    .start-test-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+    
+    /* Timer */
+    .timer {
+      background: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      margin-bottom: 24px;
+      display: none;
+      text-align: center;
+    }
+    .timer.visible { display: block; }
+    .timer-label { color: #64748b; font-size: 14px; margin-bottom: 4px; }
+    .timer-value { color: #667eea; font-size: 32px; font-weight: bold; }
+    .timer-value.warning { color: #ef4444; }
+    
+    /* Question Card */
+    .question-card {
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .question-card:hover { transform: translateY(-2px); }
+    
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .question-number {
+      background: #667eea;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .question-type {
+      background: #f1f5f9;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .question-type.mcq { background: #dbeafe; color: #1e40af; }
+    .question-type.msq { background: #fef3c7; color: #92400e; }
+    
+    .question-text {
+      font-size: 17px;
+      line-height: 1.6;
+      color: #1e293b;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .option {
+      padding: 14px 16px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .option:hover:not(.locked) { 
+      border-color: #667eea; 
+      background: #f0f4ff;
+      transform: translateX(4px);
+    }
+    .option.locked { cursor: not-allowed; }
+    .option.correct { 
+      background: #dcfce7; 
+      border-color: #22c55e;
+      animation: correctPulse 0.5s ease-out;
+    }
+    .option.wrong { 
+      background: #fee2e2; 
+      border-color: #ef4444;
+      animation: wrongShake 0.5s ease-out;
+    }
+    .option.correct::before {
+      content: '✓';
+      color: #22c55e;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .option.wrong::before {
+      content: '✗';
+      color: #ef4444;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .option input { cursor: pointer; width: 18px; height: 18px; }
+    .option.locked input { cursor: not-allowed; }
+    .option label { cursor: pointer; flex: 1; user-select: none; }
+    .option.locked label { cursor: not-allowed; }
+    
+    @keyframes correctPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    @keyframes wrongShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    
+    .check-answer-btn {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .check-answer-btn:hover:not(:disabled) { 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
+    .check-answer-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .feedback {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      display: none;
+      animation: slideDown 0.3s ease-out;
+    }
+    .feedback.visible { display: block; }
+    .feedback.correct { 
+      background: #dcfce7; 
+      color: #15803d;
+      border-left: 4px solid #22c55e;
+    }
+    .feedback.partial { 
+      background: #fef3c7; 
+      color: #92400e;
+      border-left: 4px solid #f59e0b;
+    }
+    .feedback.incorrect { 
+      background: #fee2e2; 
+      color: #991b1b;
+      border-left: 4px solid #ef4444;
+    }
+    .feedback-icon {
+      font-size: 20px;
+      margin-right: 8px;
+    }
+    .correct-answers {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      font-size: 14px;
+    }
+    
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Submit Test Button */
+    .submit-test-btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      width: 100%;
+      margin: 24px 0;
+      transition: all 0.2s;
+      display: none;
+    }
+    .submit-test-btn.visible { display: block; }
+    .submit-test-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    }
+    
+    /* Test Results */
+    .test-results {
+      background: white;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      text-align: center;
+      display: none;
+      margin-bottom: 24px;
+    }
+    .test-results.visible { display: block; }
+    .test-results h2 { color: #1e293b; margin-bottom: 24px; }
+    .score-display {
+      font-size: 64px;
+      font-weight: bold;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .result-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .result-stat {
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 12px;
+    }
+    .result-stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #1e293b;
+    }
+    .result-stat-label {
+      font-size: 14px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+    .retry-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      margin-top: 16px;
+      transition: all 0.2s;
+    }
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    }
+    
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 32px 0;
+      flex-wrap: wrap;
+    }
+    .pagination button {
+      background: white;
+      border: 2px solid #e2e8f0;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .pagination button:hover:not(:disabled) { 
+      border-color: #667eea; 
+      color: #667eea;
+      transform: translateY(-2px);
+    }
+    .pagination button:disabled { 
+      opacity: 0.5; 
+      cursor: not-allowed; 
+    }
+    .pagination .page-info { 
+      display: flex; 
+      align-items: center; 
+      background: white; 
+      padding: 12px 24px; 
+      border-radius: 10px;
+      font-weight: 600;
+      color: #667eea;
+    }
+    
+    .hidden { display: none !important; }
+    
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      header { padding: 16px; }
+      .question-card { padding: 16px; }
+      .stats { flex-direction: column; gap: 12px; text-align: center; }
+      .question-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+      .mode-selector { flex-direction: column; }
+      .question-count-selector { flex-wrap: wrap; }
+      .result-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📚 NPTEL Quiz Practice & Test</h1>
+      <p class="subtitle">Practice mode: Learn at your pace • Test mode: Challenge yourself!</p>
+      <div class="stats">
+        <div class="stat">
+          <strong id="total-questions">0</strong>
+          Total Questions
+        </div>
+        <div class="stat">
+          <strong id="current-page-num">-</strong>
+          Current Page
+        </div>
+        <div class="stat">
+          <strong id="total-pages">-</strong>
+          Total Pages
+        </div>
+      </div>
+    </header>
+
+    <!-- Mode Selector -->
+    <div class="mode-selector">
+      <button class="mode-btn active" id="practice-mode-btn">📖 Practice Mode</button>
+      <button class="mode-btn" id="test-mode-btn">🎯 Test Mode</button>
+    </div>
+
+    <!-- Test Setup -->
+    <div class="test-setup" id="test-setup">
+      <h2>🎯 Start Your Test</h2>
+      <p>Select the number of questions for your test:</p>
+      <div class="question-count-selector">
+        <button class="count-btn selected" data-count="10">10 Questions</button>
+        <button class="count-btn" data-count="12">12 Questions</button>
+        <button class="count-btn" data-count="15">15 Questions</button>
+      </div>
+      <button class="start-test-btn" id="start-test-btn">Start Test</button>
+    </div>
+
+    <!-- Timer (Test Mode Only) -->
+    <div class="timer" id="timer">
+      <div class="timer-label">Time Elapsed</div>
+      <div class="timer-value" id="timer-value">00:00</div>
+    </div>
+
+    <!-- Test Results -->
+    <div class="test-results" id="test-results"></div>
+
+    <!-- Quiz Container -->
+    <div id="quiz-container"></div>
+
+    <!-- Submit Test Button -->
+    <button class="submit-test-btn" id="submit-test-btn">Submit Test</button>
+
+    <!-- Pagination (Practice Mode Only) -->
+    <div class="pagination" id="pagination">
+      <button id="prev-btn">← Previous</button>
+      <div class="page-info">
+        Page <span id="page-display">1</span> of <span id="total-page-display">1</span>
+      </div>
+      <button id="next-btn">Next →</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { questions } from './questions.js';
+    
+    const QUESTIONS_PER_PAGE = 10;
+    let currentMode = 'practice';
+    let currentPage = 1;
+    let totalPages = 0;
+    let answeredQuestions = new Set();
+    let testQuestions = [];
+    let testStartTime = null;
+    let timerInterval = null;
+    let selectedQuestionCount = 10;
+    
+    const container = document.getElementById('quiz-container');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const pageDisplay = document.getElementById('page-display');
+    const totalPageDisplay = document.getElementById('total-page-display');
+    const practiceModeBtn = document.getElementById('practice-mode-btn');
+    const testModeBtn = document.getElementById('test-mode-btn');
+    const testSetup = document.getElementById('test-setup');
+    const startTestBtn = document.getElementById('start-test-btn');
+    const timer = document.getElementById('timer');
+    const timerValue = document.getElementById('timer-value');
+    const submitTestBtn = document.getElementById('submit-test-btn');
+    const testResults = document.getElementById('test-results');
+    const pagination = document.getElementById('pagination');
+    
+    document.getElementById('total-questions').textContent = questions.length;
+
+    // Helper to render math after DOM updates
+    function renderMath(element) {
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([element]).catch(err => console.log('MathJax error:', err));
+      }
+    }
+
+    document.querySelectorAll('.count-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedQuestionCount = parseInt(this.dataset.count);
+      });
+    });
+
+    practiceModeBtn.addEventListener('click', () => switchMode('practice'));
+    testModeBtn.addEventListener('click', () => switchMode('test'));
+
+    function switchMode(mode) {
+      currentMode = mode;
+      practiceModeBtn.classList.toggle('active', mode === 'practice');
+      testModeBtn.classList.toggle('active', mode === 'test');
+      
+      if (mode === 'practice') {
+        testSetup.classList.remove('visible');
+        timer.classList.remove('visible');
+        submitTestBtn.classList.remove('visible');
+        testResults.classList.remove('visible');
+        pagination.classList.remove('hidden');
+        stopTimer();
+        answeredQuestions.clear();
+        totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
+        document.getElementById('total-pages').textContent = totalPages;
+        renderPracticePage(1);
+      } else {
+        container.innerHTML = '';
+        pagination.classList.add('hidden');
+        timer.classList.remove('visible');
+        submitTestBtn.classList.remove('visible');
+        testResults.classList.remove('visible');
+        testSetup.classList.add('visible');
+        document.getElementById('current-page-num').textContent = '-';
+        document.getElementById('total-pages').textContent = '-';
+        stopTimer();
+      }
+    }
+
+    startTestBtn.addEventListener('click', () => {
+      const shuffled = [...questions].sort(() => Math.random() - 0.5);
+      testQuestions = shuffled.slice(0, Math.min(selectedQuestionCount, questions.length));
+      answeredQuestions.clear();
+      
+      testSetup.classList.remove('visible');
+      timer.classList.add('visible');
+      submitTestBtn.classList.add('visible');
+      
+      testStartTime = Date.now();
+      startTimer();
+      
+      renderTestQuestions();
+    });
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - testStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        timerValue.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        
+        if (elapsed > 600) {
+          timerValue.classList.add('warning');
+        }
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function renderTestQuestions() {
+      container.innerHTML = '';
+      
+      testQuestions.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.innerHTML = `
+          <div class="question-header">
+            <span class="question-number">Q${idx + 1}</span>
+            <span class="question-type ${q.type}">${q.type === 'mcq' ? 'Single Choice' : 'Multiple Select'}</span>
+          </div>
+          <div class="question-text">${q.question}</div>
+          <div class="options" data-qid="${idx}">
+            ${q.options.map((opt, oidx) => `
+              <label class="option" data-oidx="${oidx}">
+                <input type="${q.type === 'msq' ? 'checkbox' : 'radio'}" 
+                       name="testq${idx}" 
+                       value="${oidx}">
+                <span>${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+          <div class="feedback" id="test-feedback-${idx}"></div>
+        `;
+        container.appendChild(card);
+      });
+      
+      renderMath(container);
+    }
+
+    submitTestBtn.addEventListener('click', () => {
+      stopTimer();
+      
+      let correctCount = 0;
+      let partialCount = 0;
+      let incorrectCount = 0;
+      
+      testQuestions.forEach((q, idx) => {
+        const selected = Array.from(document.querySelectorAll(`input[name="testq${idx}"]:checked`))
+          .map(inp => inp.parentElement.querySelector('span').textContent.trim());
+        
+        const card = container.children[idx];
+        const options = card.querySelectorAll('.option');
+        
+        options.forEach(opt => {
+          opt.classList.add('locked');
+          opt.querySelector('input').disabled = true;
+        });
+        
+        if (q.type === 'mcq') {
+          const correct = q.answer;
+          const isCorrect = selected[0] === correct;
+          
+          options.forEach(opt => {
+            const optText = opt.querySelector('span').textContent.trim();
+            if (optText === correct) {
+              opt.classList.add('correct');
+            } else if (selected.includes(optText)) {
+              opt.classList.add('wrong');
+            }
+          });
+          
+          if (isCorrect) {
+            correctCount++;
+            showTestFeedback(idx, 'correct', '✅ Correct!');
+          } else {
+            incorrectCount++;
+            showTestFeedback(idx, 'incorrect', `❌ Incorrect. Correct: <strong>${correct}</strong>`);
+          }
+        } else {
+          const correctAnswers = new Set(q.answers);
+          const selectedSet = new Set(selected);
+          
+          const correctlySelected = selected.filter(s => correctAnswers.has(s)).length;
+          const totalCorrect = correctAnswers.size;
+          const wronglySelected = selected.filter(s => !correctAnswers.has(s)).length;
+          
+          options.forEach(opt => {
+            const optText = opt.querySelector('span').textContent.trim();
+            if (correctAnswers.has(optText)) {
+              opt.classList.add('correct');
+            } else if (selectedSet.has(optText)) {
+              opt.classList.add('wrong');
+            }
+          });
+          
+          if (correctlySelected === totalCorrect && wronglySelected === 0) {
+            correctCount++;
+            showTestFeedback(idx, 'correct', '✅ Perfect!');
+          } else if (correctlySelected > 0) {
+            partialCount++;
+            const correctList = Array.from(correctAnswers).join('<br>• ');
+            showTestFeedback(idx, 'partial', `⚠️ Partially Correct (${correctlySelected}/${totalCorrect})<div class="correct-answers"><strong>All correct:</strong><br>• ${correctList}</div>`);
+          } else {
+            incorrectCount++;
+            const correctList = Array.from(correctAnswers).join('<br>• ');
+            showTestFeedback(idx, 'incorrect', `❌ Incorrect<div class="correct-answers"><strong>Correct:</strong><br>• ${correctList}</div>`);
+          }
+        }
+      });
+      
+      const totalQuestions = testQuestions.length;
+      const score = Math.round((correctCount + (partialCount * 0.5)) / totalQuestions * 100);
+      const timeTaken = timerValue.textContent;
+      
+      submitTestBtn.classList.add('hidden');
+      testResults.innerHTML = `
+        <h2>🎉 Test Complete!</h2>
+        <div class="score-display">${score}%</div>
+        <div class="result-stats">
+          <div class="result-stat">
+            <div class="result-stat-value">${correctCount}</div>
+            <div class="result-stat-label">Correct</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-value">${partialCount}</div>
+            <div class="result-stat-label">Partial</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-value">${incorrectCount}</div>
+            <div class="result-stat-label">Incorrect</div>
+          </div>
+          <div class="result-stat">
+            <div class="result-stat-value">${timeTaken}</div>
+            <div class="result-stat-label">Time</div>
+          </div>
+        </div>
+        <button class="retry-btn" onclick="location.reload()">Try Another Test</button>
+      `;
+      testResults.classList.add('visible');
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    function showTestFeedback(idx, type, message) {
+      const feedback = document.getElementById(`test-feedback-${idx}`);
+      feedback.className = `feedback ${type} visible`;
+      feedback.innerHTML = message;
+      renderMath(feedback);
+    }
+
+    function renderPracticePage(page) {
+      container.innerHTML = '';
+      const start = (page - 1) * QUESTIONS_PER_PAGE;
+      const end = Math.min(start + QUESTIONS_PER_PAGE, questions.length);
+      const pageQuestions = questions.slice(start, end);
+      
+      pageQuestions.forEach((q, idx) => {
+        const globalIdx = start + idx;
+        const isAnswered = answeredQuestions.has(globalIdx);
+        
+        const card = document.createElement('div');
+        card.className = 'question-card';
+        card.innerHTML = `
+          <div class="question-header">
+            <span class="question-number">Q${globalIdx + 1}</span>
+            <span class="question-type ${q.type}">${q.type === 'mcq' ? 'Single Choice' : 'Multiple Select'}</span>
+          </div>
+          <div class="question-text">${q.question}</div>
+          <div class="options" data-qid="${globalIdx}">
+            ${q.options.map((opt, oidx) => `
+              <label class="option ${isAnswered ? 'locked' : ''}" data-oidx="${oidx}">
+                <input type="${q.type === 'msq' ? 'checkbox' : 'radio'}" 
+                       name="q${globalIdx}" 
+                       value="${oidx}"
+                       ${isAnswered ? 'disabled' : ''}>
+                <span>${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+          ${q.type === 'msq' ? `
+            <button class="check-answer-btn" data-qid="${globalIdx}" ${isAnswered ? 'disabled' : ''}>
+              ${isAnswered ? '✓ Answered' : 'Check Answer'}
+            </button>
+          ` : ''}
+          <div class="feedback" id="feedback-${globalIdx}"></div>
+        `;
+        container.appendChild(card);
+        
+        if (!isAnswered) {
+          if (q.type === 'mcq') {
+            setupMCQListeners(card, globalIdx, q);
+          } else {
+            setupMSQListeners(card, globalIdx, q);
+          }
+        }
+      });
+      
+      renderMath(container);
+      
+      currentPage = page;
+      pageDisplay.textContent = page;
+      document.getElementById('current-page-num').textContent = page;
+      prevBtn.disabled = page === 1;
+      nextBtn.disabled = page === totalPages;
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+function setupMCQListeners(card, qIdx, question) {
+  const options = card.querySelectorAll('.option');
+  const correctAnswer = question.answer;
+  
+  options.forEach((option, optIdx) => {
+    option.addEventListener('click', function() {
+      if (answeredQuestions.has(qIdx)) return;
+      
+      // Compare using original data, not rendered text
+      const selectedOption = question.options[optIdx];
+      const isCorrect = selectedOption === correctAnswer;
+      
+      options.forEach(opt => {
+        opt.classList.add('locked');
+        opt.querySelector('input').disabled = true;
+      });
+      
+      answeredQuestions.add(qIdx);
+      
+      if (isCorrect) {
+        this.classList.add('correct');
+        showFeedback(qIdx, 'correct', 'Correct! Well done! 🎉');
+      } else {
+        this.classList.add('wrong');
+        // Highlight correct answer
+        options.forEach((opt, idx) => {
+          if (question.options[idx] === correctAnswer) {
+            opt.classList.add('correct');
+          }
+        });
+        showFeedback(qIdx, 'incorrect', `Incorrect. The correct answer is shown in green.`);
+      }
+    });
+  });
+}
+
+function setupMSQListeners(card, qIdx, question) {
+  const checkBtn = card.querySelector('.check-answer-btn');
+  const options = card.querySelectorAll('.option');
+  const correctAnswers = new Set(question.answers);
+  
+  checkBtn.addEventListener('click', function() {
+    if (answeredQuestions.has(qIdx)) return;
+    
+    // Get selected options using original data
+    const selected = Array.from(card.querySelectorAll('input:checked'))
+      .map(inp => {
+        const optIdx = parseInt(inp.value);
+        return question.options[optIdx];
+      });
+    
+    if (selected.length === 0) {
+      alert('Please select at least one option');
+      return;
+    }
+    
+    const selectedSet = new Set(selected);
+    const correctlySelected = selected.filter(s => correctAnswers.has(s)).length;
+    const totalCorrect = correctAnswers.size;
+    const wronglySelected = selected.filter(s => !correctAnswers.has(s)).length;
+    
+    options.forEach((opt, idx) => {
+      opt.classList.add('locked');
+      opt.querySelector('input').disabled = true;
+      
+      const optText = question.options[idx];
+      if (correctAnswers.has(optText)) {
+        opt.classList.add('correct');
+      } else if (selectedSet.has(optText)) {
+        opt.classList.add('wrong');
+      }
+    });
+    
+    answeredQuestions.add(qIdx);
+    checkBtn.disabled = true;
+    checkBtn.textContent = '✓ Answered';
+    
+    if (correctlySelected === totalCorrect && wronglySelected === 0) {
+      showFeedback(qIdx, 'correct', 'Perfect! All correct answers selected! 🎉');
+    } else if (correctlySelected > 0) {
+      showFeedback(qIdx, 'partial', 
+        `Partially Correct. You got ${correctlySelected}/${totalCorrect} correct answers.`
+      );
+    } else {
+      showFeedback(qIdx, 'incorrect', 
+        `Incorrect. None of your selections were correct.`
+      );
+    }
+  });
+}
+
+    function showFeedback(qIdx, type, message) {
+      const feedback = document.getElementById(`feedback-${qIdx}`);
+      feedback.className = `feedback ${type} visible`;
+      const icons = {
+        correct: '✅',
+        partial: '⚠️',
+        incorrect: '❌'
+      };
+      feedback.innerHTML = `<span class="feedback-icon">${icons[type]}</span>${message}`;
+      renderMath(feedback);
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 1) renderPracticePage(currentPage - 1);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) renderPracticePage(currentPage + 1);
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (currentMode === 'practice') {
+        if (e.key === 'ArrowLeft' && currentPage > 1) {
+          renderPracticePage(currentPage - 1);
+        } else if (e.key === 'ArrowRight' && currentPage < totalPages) {
+          renderPracticePage(currentPage + 1);
+        }
+      }
+    });
+
+    totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
+    document.getElementById('total-pages').textContent = totalPages;
+    renderPracticePage(1);
+  </script>
+</body>
+</html>
