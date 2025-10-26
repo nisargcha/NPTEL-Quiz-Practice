@@ -827,15 +827,15 @@ export const questions = [
     "type": "msq",
     "question": "In the randomized response model, which statements are correct? Select all that apply.",
     "options": [
-      "Privacy guarantee can be controlled by parameter",
+      "Privacy guarantee can be controlled by parameter $\\varepsilon$",
       "Privacy and utility are independent of sample size",
-      "Higher values provide stronger utility",
-      "Utility guarantee scales with"
+      "Higher $\\varepsilon$ values provide stronger utility",
+      "Utility guarantee scales with $\\sqrt{n}$"
     ],
     "points": 1,
     "answers": [
-      "Privacy guarantee can be controlled by parameter <gcb-math>\\varepsilon</gcb-math>",
-      "Utility guarantee scales with <gcb-math>\\sqrt{n}</gcb-math>"
+      "Privacy guarantee can be controlled by parameter $\\varepsilon$",
+      "Utility guarantee scales with $\\sqrt{n}$"
     ]
   },
   {
