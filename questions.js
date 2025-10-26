@@ -813,7 +813,7 @@ export const questions = [
   },
 {
   "type": "mcq",
-  "question": "Your question text here",
+  "question": "Given: Xi represents truth, Yi represents randomized value of Xi, and Zi=(Yi−(1/(1+eε)))×(eε+1)/(eε−1), What is the expected value Zi?",
   "options": [
     "E$[Zi] = Yi$",
     "E$[Zi] = Xi$",
