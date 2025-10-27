@@ -691,18 +691,49 @@
           opt.querySelector('input').disabled = true;
         });
         
-        if (q.type === 'mcq') {
-          const correct = getOptionText(q.answer);
-          const isCorrect = selected[0] === correct;
-          
-          options.forEach((opt, optIdx) => {
-            if (getOptionText(q.options[optIdx]) === correct) {
-              opt.classList.add('correct');
-            } else if (selected.includes(getOptionText(q.options[optIdx]))) {
-              opt.classList.add('wrong');
-            }
-          });
-          
+if (q.type === 'mcq') {
+  const correct = q.answer;
+  const selected = selected[0]; // This is the option object/string
+  
+  // Same comparison logic as above
+  let isCorrect = false;
+  
+  if (typeof selected === 'object' && typeof correct === 'object') {
+    const selectedText = getOptionText(selected) || '';
+    const correctText = getOptionText(correct) || '';
+    
+    if (selectedText && correctText) {
+      isCorrect = selectedText === correctText;
+    } else {
+      isCorrect = getOptionImage(selected) === getOptionImage(correct);
+    }
+  } else {
+    isCorrect = getOptionText(selected) === getOptionText(correct);
+  }
+  
+  options.forEach((opt, optIdx) => {
+    const optData = q.options[optIdx];
+    let optIsCorrect = false;
+    
+    if (typeof optData === 'object' && typeof correct === 'object') {
+      const optText = getOptionText(optData) || '';
+      const correctText = getOptionText(correct) || '';
+      
+      if (optText && correctText) {
+        optIsCorrect = optText === correctText;
+      } else {
+        optIsCorrect = getOptionImage(optData) === getOptionImage(correct);
+      }
+    } else {
+      optIsCorrect = getOptionText(optData) === getOptionText(correct);
+    }
+    
+    if (optIsCorrect) {
+      opt.classList.add('correct');
+    } else if (selected && getOptionText(q.options[optIdx]) === getOptionText(selected)) {
+      opt.classList.add('wrong');
+    }
+  });
           if (isCorrect) {
             correctCount++;
             showTestFeedback(idx, 'correct', '✅ Correct!');
@@ -847,38 +878,84 @@
     }
 
     function setupMCQListeners(card, qIdx, question) {
-      const options = card.querySelectorAll('.option');
-      const correctAnswer = getOptionText(question.answer);
+  const options = card.querySelectorAll('.option');
+  const correctAnswer = question.answer;
+  
+  options.forEach((option, optIdx) => {
+    option.addEventListener('click', function() {
+      if (answeredQuestions.has(qIdx)) return;
       
-      options.forEach((option, optIdx) => {
-        option.addEventListener('click', function() {
-          if (answeredQuestions.has(qIdx)) return;
+      const selectedOption = question.options[optIdx];
+      
+      // Compare by text if available, otherwise by image URL
+      let isCorrect = false;
+      
+      if (typeof selectedOption === 'object' && typeof correctAnswer === 'object') {
+        // Both are objects (have images)
+        const selectedText = selectedOption.text || '';
+        const correctText = correctAnswer.text || '';
+        
+        if (selectedText && correctText) {
+          // Compare by text if both have text
+          isCorrect = selectedText === correctText;
+        } else {
+          // Compare by image URL if text is empty
+          isCorrect = selectedOption.image === correctAnswer.image;
+        }
+      } else if (typeof selectedOption === 'object') {
+        // Selected is object, correct is string
+        isCorrect = selectedOption.text === correctAnswer;
+      } else if (typeof correctAnswer === 'object') {
+        // Selected is string, correct is object
+        isCorrect = selectedOption === correctAnswer.text;
+      } else {
+        // Both are strings
+        isCorrect = selectedOption === correctAnswer;
+      }
+      
+      options.forEach(opt => {
+        opt.classList.add('locked');
+        opt.querySelector('input').disabled = true;
+      });
+      
+      answeredQuestions.add(qIdx);
+      
+      if (isCorrect) {
+        this.classList.add('correct');
+        showFeedback(qIdx, 'correct', 'Correct! Well done! 🎉');
+      } else {
+        this.classList.add('wrong');
+        // Highlight correct answer
+        options.forEach((opt, idx) => {
+          const optData = question.options[idx];
+          let optIsCorrect = false;
           
-          const selectedOption = getOptionText(question.options[optIdx]);
-          const isCorrect = selectedOption === correctAnswer;
-          
-          options.forEach(opt => {
-            opt.classList.add('locked');
-            opt.querySelector('input').disabled = true;
-          });
-          
-          answeredQuestions.add(qIdx);
-          
-          if (isCorrect) {
-            this.classList.add('correct');
-            showFeedback(qIdx, 'correct', 'Correct! Well done! 🎉');
+          if (typeof optData === 'object' && typeof correctAnswer === 'object') {
+            const optText = optData.text || '';
+            const correctText = correctAnswer.text || '';
+            
+            if (optText && correctText) {
+              optIsCorrect = optText === correctText;
+            } else {
+              optIsCorrect = optData.image === correctAnswer.image;
+            }
+          } else if (typeof optData === 'object') {
+            optIsCorrect = optData.text === correctAnswer;
+          } else if (typeof correctAnswer === 'object') {
+            optIsCorrect = optData === correctAnswer.text;
           } else {
-            this.classList.add('wrong');
-            options.forEach((opt, idx) => {
-              if (getOptionText(question.options[idx]) === correctAnswer) {
-                opt.classList.add('correct');
-              }
-            });
-            showFeedback(qIdx, 'incorrect', `Incorrect. The correct answer is shown in green.`);
+            optIsCorrect = optData === correctAnswer;
+          }
+          
+          if (optIsCorrect) {
+            opt.classList.add('correct');
           }
         });
-      });
-    }
+        showFeedback(qIdx, 'incorrect', `Incorrect. The correct answer is shown in green.`);
+      }
+    });
+  });
+}
 
     function setupMSQListeners(card, qIdx, question) {
       const checkBtn = card.querySelector('.check-answer-btn');

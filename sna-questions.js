@@ -603,7 +603,7 @@ export const questions = [
         "image": "https://storage.googleapis.com/swayam-node1-production.appspot.com/assets/img/noc25_cs100/W5Q9_d.png"
       }
     ],
-    "points": 0,
+    "points": 1,
     "image": "https://storage.googleapis.com/swayam-node1-production.appspot.com/assets/img/noc25_cs100/W5Q9.png",
     "answer": {
       "text": "",
