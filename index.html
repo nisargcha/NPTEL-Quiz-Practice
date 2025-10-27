@@ -59,7 +59,6 @@
     }
     .stat strong { color: #1e293b; font-size: 20px; display: block; }
     
-    /* Mode Selector */
     .mode-selector {
       display: flex;
       gap: 12px;
@@ -83,7 +82,6 @@
       border-color: transparent;
     }
     
-    /* Test Setup */
     .test-setup {
       background: white;
       padding: 32px;
@@ -132,7 +130,6 @@
       box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
     }
     
-    /* Timer */
     .timer {
       background: white;
       padding: 16px 24px;
@@ -147,7 +144,6 @@
     .timer-value { color: #667eea; font-size: 32px; font-weight: bold; }
     .timer-value.warning { color: #ef4444; }
     
-    /* Question Card */
     .question-card {
       background: white;
       padding: 24px;
@@ -189,6 +185,24 @@
       color: #1e293b;
       margin-bottom: 16px;
       font-weight: 500;
+    }
+    
+    .question-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 16px 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: block;
+    }
+    
+    .option-image {
+      max-width: 200px;
+      height: auto;
+      border-radius: 6px;
+      margin: 8px 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      display: block;
     }
     
     .options {
@@ -314,7 +328,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
     
-    /* Submit Test Button */
     .submit-test-btn {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: white;
@@ -335,7 +348,6 @@
       box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
     }
     
-    /* Test Results */
     .test-results {
       background: white;
       padding: 32px;
@@ -434,6 +446,8 @@
       body { padding: 12px; }
       header { padding: 16px; }
       .question-card { padding: 16px; }
+      .question-image { margin: 12px 0; }
+      .option-image { max-width: 150px; }
       .stats { flex-direction: column; gap: 12px; text-align: center; }
       .question-header { flex-direction: column; gap: 8px; align-items: flex-start; }
       .mode-selector { flex-direction: column; }
@@ -464,40 +478,31 @@
       </div>
     </header>
 
-    <!-- Mode Selector -->
     <div class="mode-selector">
       <button class="mode-btn active" id="practice-mode-btn">📖 Practice Mode</button>
       <button class="mode-btn" id="test-mode-btn">🎯 Test Mode</button>
     </div>
 
-    <!-- Test Setup -->
     <div class="test-setup" id="test-setup">
       <h2>🎯 Start Your Test</h2>
       <p>Select the number of questions for your test:</p>
       <div class="question-count-selector">
-        <button class="count-btn selected" data-count="10">10 Questions</button>
-        <button class="count-btn" data-count="12">12 Questions</button>
+        <button class="count-btn selected" data-count="12">12 Questions</button>
         <button class="count-btn" data-count="15">15 Questions</button>
+        <button class="count-btn" data-count="20">20 Questions</button>
       </div>
       <button class="start-test-btn" id="start-test-btn">Start Test</button>
     </div>
 
-    <!-- Timer (Test Mode Only) -->
     <div class="timer" id="timer">
       <div class="timer-label">Time Elapsed</div>
       <div class="timer-value" id="timer-value">00:00</div>
     </div>
 
-    <!-- Test Results -->
     <div class="test-results" id="test-results"></div>
-
-    <!-- Quiz Container -->
     <div id="quiz-container"></div>
-
-    <!-- Submit Test Button -->
     <button class="submit-test-btn" id="submit-test-btn">Submit Test</button>
 
-    <!-- Pagination (Practice Mode Only) -->
     <div class="pagination" id="pagination">
       <button id="prev-btn">← Previous</button>
       <div class="page-info">
@@ -508,7 +513,7 @@
   </div>
 
   <script type="module">
-    import { questions } from './questions.js';
+    import { questions } from './sna-questions.js';
     
     const QUESTIONS_PER_PAGE = 10;
     let currentMode = 'practice';
@@ -537,11 +542,18 @@
     
     document.getElementById('total-questions').textContent = questions.length;
 
-    // Helper to render math after DOM updates
     function renderMath(element) {
       if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise([element]).catch(err => console.log('MathJax error:', err));
       }
+    }
+    
+    function getOptionText(opt) {
+      return typeof opt === 'object' ? opt.text : opt;
+    }
+    
+    function getOptionImage(opt) {
+      return typeof opt === 'object' ? opt.image : null;
     }
 
     document.querySelectorAll('.count-btn').forEach(btn => {
@@ -631,15 +643,23 @@
             <span class="question-type ${q.type}">${q.type === 'mcq' ? 'Single Choice' : 'Multiple Select'}</span>
           </div>
           <div class="question-text">${q.question}</div>
+          ${q.image ? `<img src="${q.image}" alt="Question diagram" class="question-image">` : ''}
           <div class="options" data-qid="${idx}">
-            ${q.options.map((opt, oidx) => `
-              <label class="option" data-oidx="${oidx}">
-                <input type="${q.type === 'msq' ? 'checkbox' : 'radio'}" 
-                       name="testq${idx}" 
-                       value="${oidx}">
-                <span>${opt}</span>
-              </label>
-            `).join('')}
+            ${q.options.map((opt, oidx) => {
+              const optText = getOptionText(opt);
+              const optImg = getOptionImage(opt);
+              return `
+                <label class="option" data-oidx="${oidx}">
+                  <input type="${q.type === 'msq' ? 'checkbox' : 'radio'}" 
+                         name="testq${idx}" 
+                         value="${oidx}">
+                  <span>
+                    ${optText}
+                    ${optImg ? `<img src="${optImg}" alt="Option" class="option-image">` : ''}
+                  </span>
+                </label>
+              `;
+            }).join('')}
           </div>
           <div class="feedback" id="test-feedback-${idx}"></div>
         `;
@@ -658,7 +678,10 @@
       
       testQuestions.forEach((q, idx) => {
         const selected = Array.from(document.querySelectorAll(`input[name="testq${idx}"]:checked`))
-          .map(inp => inp.parentElement.querySelector('span').textContent.trim());
+          .map(inp => {
+            const optIdx = parseInt(inp.value);
+            return getOptionText(q.options[optIdx]);
+          });
         
         const card = container.children[idx];
         const options = card.querySelectorAll('.option');
@@ -669,14 +692,13 @@
         });
         
         if (q.type === 'mcq') {
-          const correct = q.answer;
+          const correct = getOptionText(q.answer);
           const isCorrect = selected[0] === correct;
           
-          options.forEach(opt => {
-            const optText = opt.querySelector('span').textContent.trim();
-            if (optText === correct) {
+          options.forEach((opt, optIdx) => {
+            if (getOptionText(q.options[optIdx]) === correct) {
               opt.classList.add('correct');
-            } else if (selected.includes(optText)) {
+            } else if (selected.includes(getOptionText(q.options[optIdx]))) {
               opt.classList.add('wrong');
             }
           });
@@ -686,18 +708,18 @@
             showTestFeedback(idx, 'correct', '✅ Correct!');
           } else {
             incorrectCount++;
-            showTestFeedback(idx, 'incorrect', `❌ Incorrect. Correct: <strong>${correct}</strong>`);
+            showTestFeedback(idx, 'incorrect', `❌ Incorrect`);
           }
         } else {
-          const correctAnswers = new Set(q.answers);
+          const correctAnswers = new Set(q.answers.map(getOptionText));
           const selectedSet = new Set(selected);
           
           const correctlySelected = selected.filter(s => correctAnswers.has(s)).length;
           const totalCorrect = correctAnswers.size;
           const wronglySelected = selected.filter(s => !correctAnswers.has(s)).length;
           
-          options.forEach(opt => {
-            const optText = opt.querySelector('span').textContent.trim();
+          options.forEach((opt, optIdx) => {
+            const optText = getOptionText(q.options[optIdx]);
             if (correctAnswers.has(optText)) {
               opt.classList.add('correct');
             } else if (selectedSet.has(optText)) {
@@ -710,12 +732,10 @@
             showTestFeedback(idx, 'correct', '✅ Perfect!');
           } else if (correctlySelected > 0) {
             partialCount++;
-            const correctList = Array.from(correctAnswers).join('<br>• ');
-            showTestFeedback(idx, 'partial', `⚠️ Partially Correct (${correctlySelected}/${totalCorrect})<div class="correct-answers"><strong>All correct:</strong><br>• ${correctList}</div>`);
+            showTestFeedback(idx, 'partial', `⚠️ Partially Correct (${correctlySelected}/${totalCorrect})`);
           } else {
             incorrectCount++;
-            const correctList = Array.from(correctAnswers).join('<br>• ');
-            showTestFeedback(idx, 'incorrect', `❌ Incorrect<div class="correct-answers"><strong>Correct:</strong><br>• ${correctList}</div>`);
+            showTestFeedback(idx, 'incorrect', `❌ Incorrect`);
           }
         }
       });
@@ -778,16 +798,24 @@
             <span class="question-type ${q.type}">${q.type === 'mcq' ? 'Single Choice' : 'Multiple Select'}</span>
           </div>
           <div class="question-text">${q.question}</div>
+          ${q.image ? `<img src="${q.image}" alt="Question diagram" class="question-image">` : ''}
           <div class="options" data-qid="${globalIdx}">
-            ${q.options.map((opt, oidx) => `
-              <label class="option ${isAnswered ? 'locked' : ''}" data-oidx="${oidx}">
-                <input type="${q.type === 'msq' ? 'checkbox' : 'radio'}" 
-                       name="q${globalIdx}" 
-                       value="${oidx}"
-                       ${isAnswered ? 'disabled' : ''}>
-                <span>${opt}</span>
-              </label>
-            `).join('')}
+            ${q.options.map((opt, oidx) => {
+              const optText = getOptionText(opt);
+              const optImg = getOptionImage(opt);
+              return `
+                <label class="option ${isAnswered ? 'locked' : ''}" data-oidx="${oidx}">
+                  <input type="${q.type === 'msq' ? 'checkbox' : 'radio'}" 
+                         name="q${globalIdx}" 
+                         value="${oidx}"
+                         ${isAnswered ? 'disabled' : ''}>
+                  <span>
+                    ${optText}
+                    ${optImg ? `<img src="${optImg}" alt="Option" class="option-image">` : ''}
+                  </span>
+                </label>
+              `;
+            }).join('')}
           </div>
           ${q.type === 'msq' ? `
             <button class="check-answer-btn" data-qid="${globalIdx}" ${isAnswered ? 'disabled' : ''}>
@@ -818,96 +846,93 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-function setupMCQListeners(card, qIdx, question) {
-  const options = card.querySelectorAll('.option');
-  const correctAnswer = question.answer;
-  
-  options.forEach((option, optIdx) => {
-    option.addEventListener('click', function() {
-      if (answeredQuestions.has(qIdx)) return;
+    function setupMCQListeners(card, qIdx, question) {
+      const options = card.querySelectorAll('.option');
+      const correctAnswer = getOptionText(question.answer);
       
-      // Compare using original data, not rendered text
-      const selectedOption = question.options[optIdx];
-      const isCorrect = selectedOption === correctAnswer;
-      
-      options.forEach(opt => {
-        opt.classList.add('locked');
-        opt.querySelector('input').disabled = true;
-      });
-      
-      answeredQuestions.add(qIdx);
-      
-      if (isCorrect) {
-        this.classList.add('correct');
-        showFeedback(qIdx, 'correct', 'Correct! Well done! 🎉');
-      } else {
-        this.classList.add('wrong');
-        // Highlight correct answer
-        options.forEach((opt, idx) => {
-          if (question.options[idx] === correctAnswer) {
-            opt.classList.add('correct');
+      options.forEach((option, optIdx) => {
+        option.addEventListener('click', function() {
+          if (answeredQuestions.has(qIdx)) return;
+          
+          const selectedOption = getOptionText(question.options[optIdx]);
+          const isCorrect = selectedOption === correctAnswer;
+          
+          options.forEach(opt => {
+            opt.classList.add('locked');
+            opt.querySelector('input').disabled = true;
+          });
+          
+          answeredQuestions.add(qIdx);
+          
+          if (isCorrect) {
+            this.classList.add('correct');
+            showFeedback(qIdx, 'correct', 'Correct! Well done! 🎉');
+          } else {
+            this.classList.add('wrong');
+            options.forEach((opt, idx) => {
+              if (getOptionText(question.options[idx]) === correctAnswer) {
+                opt.classList.add('correct');
+              }
+            });
+            showFeedback(qIdx, 'incorrect', `Incorrect. The correct answer is shown in green.`);
           }
         });
-        showFeedback(qIdx, 'incorrect', `Incorrect. The correct answer is shown in green.`);
-      }
-    });
-  });
-}
-
-function setupMSQListeners(card, qIdx, question) {
-  const checkBtn = card.querySelector('.check-answer-btn');
-  const options = card.querySelectorAll('.option');
-  const correctAnswers = new Set(question.answers);
-  
-  checkBtn.addEventListener('click', function() {
-    if (answeredQuestions.has(qIdx)) return;
-    
-    // Get selected options using original data
-    const selected = Array.from(card.querySelectorAll('input:checked'))
-      .map(inp => {
-        const optIdx = parseInt(inp.value);
-        return question.options[optIdx];
       });
-    
-    if (selected.length === 0) {
-      alert('Please select at least one option');
-      return;
     }
-    
-    const selectedSet = new Set(selected);
-    const correctlySelected = selected.filter(s => correctAnswers.has(s)).length;
-    const totalCorrect = correctAnswers.size;
-    const wronglySelected = selected.filter(s => !correctAnswers.has(s)).length;
-    
-    options.forEach((opt, idx) => {
-      opt.classList.add('locked');
-      opt.querySelector('input').disabled = true;
+
+    function setupMSQListeners(card, qIdx, question) {
+      const checkBtn = card.querySelector('.check-answer-btn');
+      const options = card.querySelectorAll('.option');
+      const correctAnswers = new Set(question.answers.map(getOptionText));
       
-      const optText = question.options[idx];
-      if (correctAnswers.has(optText)) {
-        opt.classList.add('correct');
-      } else if (selectedSet.has(optText)) {
-        opt.classList.add('wrong');
-      }
-    });
-    
-    answeredQuestions.add(qIdx);
-    checkBtn.disabled = true;
-    checkBtn.textContent = '✓ Answered';
-    
-    if (correctlySelected === totalCorrect && wronglySelected === 0) {
-      showFeedback(qIdx, 'correct', 'Perfect! All correct answers selected! 🎉');
-    } else if (correctlySelected > 0) {
-      showFeedback(qIdx, 'partial', 
-        `Partially Correct. You got ${correctlySelected}/${totalCorrect} correct answers.`
-      );
-    } else {
-      showFeedback(qIdx, 'incorrect', 
-        `Incorrect. None of your selections were correct.`
-      );
+      checkBtn.addEventListener('click', function() {
+        if (answeredQuestions.has(qIdx)) return;
+        
+        const selected = Array.from(card.querySelectorAll('input:checked'))
+          .map(inp => {
+            const optIdx = parseInt(inp.value);
+            return getOptionText(question.options[optIdx]);
+          });
+        
+        if (selected.length === 0) {
+          alert('Please select at least one option');
+          return;
+        }
+        
+        const selectedSet = new Set(selected);
+        const correctlySelected = selected.filter(s => correctAnswers.has(s)).length;
+        const totalCorrect = correctAnswers.size;
+        const wronglySelected = selected.filter(s => !correctAnswers.has(s)).length;
+        
+        options.forEach((opt, idx) => {
+          opt.classList.add('locked');
+          opt.querySelector('input').disabled = true;
+          
+          const optText = getOptionText(question.options[idx]);
+          if (correctAnswers.has(optText)) {
+            opt.classList.add('correct');
+          } else if (selectedSet.has(optText)) {
+            opt.classList.add('wrong');
+          }
+        });
+        
+        answeredQuestions.add(qIdx);
+        checkBtn.disabled = true;
+        checkBtn.textContent = '✓ Answered';
+        
+        if (correctlySelected === totalCorrect && wronglySelected === 0) {
+          showFeedback(qIdx, 'correct', 'Perfect! All correct answers selected! 🎉');
+        } else if (correctlySelected > 0) {
+          showFeedback(qIdx, 'partial', 
+            `Partially Correct. You got ${correctlySelected}/${totalCorrect} correct answers.`
+          );
+        } else {
+          showFeedback(qIdx, 'incorrect', 
+            `Incorrect. None of your selections were correct.`
+          );
+        }
+      });
     }
-  });
-}
 
     function showFeedback(qIdx, type, message) {
       const feedback = document.getElementById(`feedback-${qIdx}`);
