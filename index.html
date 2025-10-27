@@ -487,7 +487,7 @@
       <h2>🎯 Start Your Test</h2>
       <p>Select the number of questions for your test:</p>
       <div class="question-count-selector">
-        <button class="count-btn selected" data-count="12">12 Questions</button>
+        <button class="count-btn selected" data-count="10">10 Questions</button>
         <button class="count-btn" data-count="15">15 Questions</button>
         <button class="count-btn" data-count="20">20 Questions</button>
       </div>
@@ -513,7 +513,7 @@
   </div>
 
   <script type="module">
-    import { questions } from './sna-questions.js';
+    import { questions } from './questions.js';
     
     const QUESTIONS_PER_PAGE = 10;
     let currentMode = 'practice';
@@ -680,7 +680,7 @@
         const selected = Array.from(document.querySelectorAll(`input[name="testq${idx}"]:checked`))
           .map(inp => {
             const optIdx = parseInt(inp.value);
-            return getOptionText(q.options[optIdx]);
+            return q.options[optIdx];
           });
         
         const card = container.children[idx];
@@ -691,49 +691,48 @@
           opt.querySelector('input').disabled = true;
         });
         
-if (q.type === 'mcq') {
-  const correct = q.answer;
-  const selected = selected[0]; // This is the option object/string
-  
-  // Same comparison logic as above
-  let isCorrect = false;
-  
-  if (typeof selected === 'object' && typeof correct === 'object') {
-    const selectedText = getOptionText(selected) || '';
-    const correctText = getOptionText(correct) || '';
-    
-    if (selectedText && correctText) {
-      isCorrect = selectedText === correctText;
-    } else {
-      isCorrect = getOptionImage(selected) === getOptionImage(correct);
-    }
-  } else {
-    isCorrect = getOptionText(selected) === getOptionText(correct);
-  }
-  
-  options.forEach((opt, optIdx) => {
-    const optData = q.options[optIdx];
-    let optIsCorrect = false;
-    
-    if (typeof optData === 'object' && typeof correct === 'object') {
-      const optText = getOptionText(optData) || '';
-      const correctText = getOptionText(correct) || '';
-      
-      if (optText && correctText) {
-        optIsCorrect = optText === correctText;
-      } else {
-        optIsCorrect = getOptionImage(optData) === getOptionImage(correct);
-      }
-    } else {
-      optIsCorrect = getOptionText(optData) === getOptionText(correct);
-    }
-    
-    if (optIsCorrect) {
-      opt.classList.add('correct');
-    } else if (selected && getOptionText(q.options[optIdx]) === getOptionText(selected)) {
-      opt.classList.add('wrong');
-    }
-  });
+        if (q.type === 'mcq') {
+          const correct = q.answer;
+          const selectedOpt = selected[0];
+          
+          let isCorrect = false;
+          if (typeof selectedOpt === 'object' && typeof correct === 'object') {
+            const selectedText = getOptionText(selectedOpt) || '';
+            const correctText = getOptionText(correct) || '';
+            
+            if (selectedText && correctText) {
+              isCorrect = selectedText === correctText;
+            } else {
+              isCorrect = getOptionImage(selectedOpt) === getOptionImage(correct);
+            }
+          } else {
+            isCorrect = getOptionText(selectedOpt) === getOptionText(correct);
+          }
+          
+          options.forEach((opt, optIdx) => {
+            const optData = q.options[optIdx];
+            let optIsCorrect = false;
+            
+            if (typeof optData === 'object' && typeof correct === 'object') {
+              const optText = getOptionText(optData) || '';
+              const correctText = getOptionText(correct) || '';
+              
+              if (optText && correctText) {
+                optIsCorrect = optText === correctText;
+              } else {
+                optIsCorrect = getOptionImage(optData) === getOptionImage(correct);
+              }
+            } else {
+              optIsCorrect = getOptionText(optData) === getOptionText(correct);
+            }
+            
+            if (optIsCorrect) {
+              opt.classList.add('correct');
+            } else if (selected.length > 0 && optIdx === parseInt(card.querySelector(`input[name="testq${idx}"]:checked`)?.value)) {
+              opt.classList.add('wrong');
+            }
+          });
+          
           if (isCorrect) {
             correctCount++;
             showTestFeedback(idx, 'correct', '✅ Correct!');
@@ -742,18 +741,42 @@ if (q.type === 'mcq') {
             showTestFeedback(idx, 'incorrect', `❌ Incorrect`);
           }
         } else {
-          const correctAnswers = new Set(q.answers.map(getOptionText));
-          const selectedSet = new Set(selected);
+          const correctAnswers = new Set(q.answers.map(ans => {
+            if (typeof ans === 'object') {
+              const text = getOptionText(ans) || '';
+              const img = getOptionImage(ans);
+              return text ? text : img;
+            }
+            return ans;
+          }));
           
-          const correctlySelected = selected.filter(s => correctAnswers.has(s)).length;
+          const selectedSet = new Set(selected.map(sel => {
+            if (typeof sel === 'object') {
+              const text = getOptionText(sel) || '';
+              const img = getOptionImage(sel);
+              return text ? text : img;
+            }
+            return sel;
+          }));
+          
+          const correctlySelected = [...selectedSet].filter(s => correctAnswers.has(s)).length;
           const totalCorrect = correctAnswers.size;
-          const wronglySelected = selected.filter(s => !correctAnswers.has(s)).length;
+          const wronglySelected = [...selectedSet].filter(s => !correctAnswers.has(s)).length;
           
           options.forEach((opt, optIdx) => {
-            const optText = getOptionText(q.options[optIdx]);
-            if (correctAnswers.has(optText)) {
+            const optData = q.options[optIdx];
+            let optKey;
+            if (typeof optData === 'object') {
+              const text = getOptionText(optData) || '';
+              const img = getOptionImage(optData);
+              optKey = text ? text : img;
+            } else {
+              optKey = optData;
+            }
+            
+            if (correctAnswers.has(optKey)) {
               opt.classList.add('correct');
-            } else if (selectedSet.has(optText)) {
+            } else if (selectedSet.has(optKey)) {
               opt.classList.add('wrong');
             }
           });
@@ -878,89 +901,88 @@ if (q.type === 'mcq') {
     }
 
     function setupMCQListeners(card, qIdx, question) {
-  const options = card.querySelectorAll('.option');
-  const correctAnswer = question.answer;
-  
-  options.forEach((option, optIdx) => {
-    option.addEventListener('click', function() {
-      if (answeredQuestions.has(qIdx)) return;
+      const options = card.querySelectorAll('.option');
+      const correctAnswer = question.answer;
       
-      const selectedOption = question.options[optIdx];
-      
-      // Compare by text if available, otherwise by image URL
-      let isCorrect = false;
-      
-      if (typeof selectedOption === 'object' && typeof correctAnswer === 'object') {
-        // Both are objects (have images)
-        const selectedText = selectedOption.text || '';
-        const correctText = correctAnswer.text || '';
-        
-        if (selectedText && correctText) {
-          // Compare by text if both have text
-          isCorrect = selectedText === correctText;
-        } else {
-          // Compare by image URL if text is empty
-          isCorrect = selectedOption.image === correctAnswer.image;
-        }
-      } else if (typeof selectedOption === 'object') {
-        // Selected is object, correct is string
-        isCorrect = selectedOption.text === correctAnswer;
-      } else if (typeof correctAnswer === 'object') {
-        // Selected is string, correct is object
-        isCorrect = selectedOption === correctAnswer.text;
-      } else {
-        // Both are strings
-        isCorrect = selectedOption === correctAnswer;
-      }
-      
-      options.forEach(opt => {
-        opt.classList.add('locked');
-        opt.querySelector('input').disabled = true;
-      });
-      
-      answeredQuestions.add(qIdx);
-      
-      if (isCorrect) {
-        this.classList.add('correct');
-        showFeedback(qIdx, 'correct', 'Correct! Well done! 🎉');
-      } else {
-        this.classList.add('wrong');
-        // Highlight correct answer
-        options.forEach((opt, idx) => {
-          const optData = question.options[idx];
-          let optIsCorrect = false;
+      options.forEach((option, optIdx) => {
+        option.addEventListener('click', function() {
+          if (answeredQuestions.has(qIdx)) return;
           
-          if (typeof optData === 'object' && typeof correctAnswer === 'object') {
-            const optText = optData.text || '';
+          const selectedOption = question.options[optIdx];
+          
+          let isCorrect = false;
+          
+          if (typeof selectedOption === 'object' && typeof correctAnswer === 'object') {
+            const selectedText = selectedOption.text || '';
             const correctText = correctAnswer.text || '';
             
-            if (optText && correctText) {
-              optIsCorrect = optText === correctText;
+            if (selectedText && correctText) {
+              isCorrect = selectedText === correctText;
             } else {
-              optIsCorrect = optData.image === correctAnswer.image;
+              isCorrect = selectedOption.image === correctAnswer.image;
             }
-          } else if (typeof optData === 'object') {
-            optIsCorrect = optData.text === correctAnswer;
+          } else if (typeof selectedOption === 'object') {
+            isCorrect = selectedOption.text === correctAnswer;
           } else if (typeof correctAnswer === 'object') {
-            optIsCorrect = optData === correctAnswer.text;
+            isCorrect = selectedOption === correctAnswer.text;
           } else {
-            optIsCorrect = optData === correctAnswer;
+            isCorrect = selectedOption === correctAnswer;
           }
           
-          if (optIsCorrect) {
-            opt.classList.add('correct');
+          options.forEach(opt => {
+            opt.classList.add('locked');
+            opt.querySelector('input').disabled = true;
+          });
+          
+          answeredQuestions.add(qIdx);
+          
+          if (isCorrect) {
+            this.classList.add('correct');
+            showFeedback(qIdx, 'correct', 'Correct! Well done! 🎉');
+          } else {
+            this.classList.add('wrong');
+            options.forEach((opt, idx) => {
+              const optData = question.options[idx];
+              let optIsCorrect = false;
+              
+              if (typeof optData === 'object' && typeof correctAnswer === 'object') {
+                const optText = optData.text || '';
+                const correctText = correctAnswer.text || '';
+                
+                if (optText && correctText) {
+                  optIsCorrect = optText === correctText;
+                } else {
+                  optIsCorrect = optData.image === correctAnswer.image;
+                }
+              } else if (typeof optData === 'object') {
+                optIsCorrect = optData.text === correctAnswer;
+              } else if (typeof correctAnswer === 'object') {
+                optIsCorrect = optData === correctAnswer.text;
+              } else {
+                optIsCorrect = optData === correctAnswer;
+              }
+              
+              if (optIsCorrect) {
+                opt.classList.add('correct');
+              }
+            });
+            showFeedback(qIdx, 'incorrect', `Incorrect. The correct answer is shown in green.`);
           }
         });
-        showFeedback(qIdx, 'incorrect', `Incorrect. The correct answer is shown in green.`);
-      }
-    });
-  });
-}
+      });
+    }
 
     function setupMSQListeners(card, qIdx, question) {
       const checkBtn = card.querySelector('.check-answer-btn');
       const options = card.querySelectorAll('.option');
-      const correctAnswers = new Set(question.answers.map(getOptionText));
+      const correctAnswers = new Set(question.answers.map(ans => {
+        if (typeof ans === 'object') {
+          const text = getOptionText(ans) || '';
+          const img = getOptionImage(ans);
+          return text ? text : img;
+        }
+        return ans;
+      }));
       
       checkBtn.addEventListener('click', function() {
         if (answeredQuestions.has(qIdx)) return;
@@ -968,7 +990,13 @@ if (q.type === 'mcq') {
         const selected = Array.from(card.querySelectorAll('input:checked'))
           .map(inp => {
             const optIdx = parseInt(inp.value);
-            return getOptionText(question.options[optIdx]);
+            const opt = question.options[optIdx];
+            if (typeof opt === 'object') {
+              const text = getOptionText(opt) || '';
+              const img = getOptionImage(opt);
+              return text ? text : img;
+            }
+            return opt;
           });
         
         if (selected.length === 0) {
@@ -985,10 +1013,19 @@ if (q.type === 'mcq') {
           opt.classList.add('locked');
           opt.querySelector('input').disabled = true;
           
-          const optText = getOptionText(question.options[idx]);
-          if (correctAnswers.has(optText)) {
+          const optData = question.options[idx];
+          let optKey;
+          if (typeof optData === 'object') {
+            const text = getOptionText(optData) || '';
+            const img = getOptionImage(optData);
+            optKey = text ? text : img;
+          } else {
+            optKey = optData;
+          }
+          
+          if (correctAnswers.has(optKey)) {
             opt.classList.add('correct');
-          } else if (selectedSet.has(optText)) {
+          } else if (selectedSet.has(optKey)) {
             opt.classList.add('wrong');
           }
         });
